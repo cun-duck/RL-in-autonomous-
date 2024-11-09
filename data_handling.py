@@ -1,19 +1,17 @@
-# data_handling.py
 import pandas as pd
 
-def load_data(project, algorithms):
-    # Sample data structure based on selected project and algorithms
-    # For real application, load from CSV or database
+# Fungsi untuk memuat data (misalnya dari CSV atau sumber lain)
+def load_data():
+    # Contoh memuat data dari file CSV
     data = {
-        "CARLA Simulation": {
-            "PPO": [85, 95, 70],
-            "DQN": [90, 80, 75],
-            "TD3": [78, 85, 68]
-        },
-        "AirSim Simulation": {
-            "SAC": [88, 92, 78],
-            "TRPO": [82, 87, 74]
-        }
+        "Project A": pd.read_csv("project_a_data.csv"),
+        "Project B": pd.read_csv("project_b_data.csv"),
     }
-    # Filter selected algorithms
-    return {alg: data[project][alg] for alg in algorithms if alg in data[project]}
+    return data
+
+# Fungsi untuk menyiapkan data berdasarkan proyek yang dipilih
+def prepare_data(data, project):
+    # Mempersiapkan data, bisa meliputi pembersihan atau transformasi
+    project_data = data[project]
+    # Misalnya, membersihkan data atau menyiapkan metrik tertentu
+    return project_data
