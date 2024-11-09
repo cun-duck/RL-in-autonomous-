@@ -1,29 +1,26 @@
-# app.py
 import streamlit as st
-from data_handling import load_data
-from visualization import render_metrics_chart, display_summary
+import pandas as pd
+from data_handling import load_data, prepare_data
+from visualization import render_metrics_chart, animate_vehicle_path
 
-st.title("Comparative Study of RL Algorithms in Autonomous Vehicle Simulations")
+# Sidebar configuration
+st.sidebar.header("Autonomous Driving Algorithm Comparison")
 
-# Sidebar for Project and Algorithm Selection
-project = st.sidebar.selectbox("Select Project", ["CARLA Simulation", "AirSim Simulation"])
-algorithms = st.sidebar.multiselect(
-    "Select Algorithms to Compare", 
-    ["PPO", "DQN", "TD3", "SAC", "TRPO"], 
-    default=["PPO", "DQN"] if project == "CARLA Simulation" else ["SAC", "TRPO"]
-)
+# Load data
+data = load_data()
 
-# Data and Metrics Load
-data = load_data(project, algorithms)
-st.sidebar.markdown("Adjust Metric Weightings (for Custom Comparison)")
+# Prepare data based on user input
+project = st.sidebar.selectbox("Select Project", data.keys())
+accuracy_weight = st.sidebar.slider("Accuracy Weight", 0.0, 1.0, 0.3)
+collision_weight = st.sidebar.slider("Collision Avoidance Weight", 0.0, 1.0, 0.4)
+time_weight = st.sidebar.slider("Time Efficiency Weight", 0.0, 1.0, 0.3)
 
-# Sliders for weighting metrics dynamically
-accuracy_weight = st.sidebar.slider("Path Accuracy Weight", 0.0, 1.0, 0.5)
-collision_weight = st.sidebar.slider("Collision Avoidance Weight", 0.0, 1.0, 0.5)
-time_weight = st.sidebar.slider("Time Efficiency Weight", 0.0, 1.0, 0.5)
+# Display project overview
+st.title(f"Comparing Reinforcement Learning Algorithms for {project}")
+st.write("Explore the performance of different algorithms with various weights.")
 
-# Render charts
+# Show metrics chart with animation
 render_metrics_chart(data, project, accuracy_weight, collision_weight, time_weight)
 
-# Display summary
-display_summary(project, algorithms)
+# Display path animation for vehicle
+animate_vehicle_path()
