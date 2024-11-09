@@ -1,5 +1,5 @@
-accuracy,collision_avoidance,time_efficiency,project
-0.75,0.78,0.70,Project B
-0.80,0.83,0.75,Project B
-0.77,0.79,0.72,Project B
-0.82,0.85,0.78,Project B
+accuracy,collision_avoidance,time_efficiency,project,lat,lon,time
+0.75,0.78,0.70,Project B,34.0522,-118.2437,0
+0.80,0.83,0.75,Project B,34.0523,-118.2438,1
+0.77,0.79,0.72,Project B,34.0524,-118.2439,2
+0.82,0.85,0.78,Project B,34.0525,-118.2440,3
