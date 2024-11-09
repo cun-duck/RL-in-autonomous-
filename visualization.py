@@ -1,100 +1,69 @@
-import streamlit as st
-import pydeck as pdk
+import pygame
 import pandas as pd
+import streamlit as st
 import time
-
-def render_metrics_chart(data, project, accuracy_weight, collision_weight, time_weight):
-    """
-    Render a chart of algorithm performance metrics with the given weights.
-    """
-    # Prepare data for metrics chart
-    project_data = data[project]
-    accuracy = project_data["accuracy"] * accuracy_weight
-    collision_avoidance = project_data["collision_avoidance"] * collision_weight
-    time_efficiency = project_data["time_efficiency"] * time_weight
-    
-    # Create a DataFrame for the metrics
-    metrics_data = pd.DataFrame({
-        "Metric": ["Accuracy", "Collision Avoidance", "Time Efficiency"],
-        "Score": [accuracy.sum(), collision_avoidance.sum(), time_efficiency.sum()]
-    })
-    
-    st.write("Performance Metrics:")
-    st.bar_chart(metrics_data.set_index('Metric'))
+from io import BytesIO
 
 def animate_vehicle_path(data, project):
-    """
-    Render the vehicle path animation on a map using Pydeck, with looping animation.
-    """
-    # Load project data
+    # Load the data for the selected project
     project_data = data[project]
-
-    # Prepare data for the vehicle path animation
-    vehicle_data = project_data[["lat", "lon", "time"]]
     
-    # Create a pydeck layer to display vehicle paths
-    deck = pdk.Deck(
-        initial_view_state=pdk.ViewState(latitude=vehicle_data["lat"].mean(),
-                                         longitude=vehicle_data["lon"].mean(),
-                                         zoom=15),
-        layers=[
-            pdk.Layer(
-                "PathLayer",  # Layer for drawing paths
-                data=vehicle_data,  # Data for vehicle path
-                get_path="[[lon, lat]]",  # Coordinates for the path
-                get_width=5,  # Path width
-                get_color=[0, 255, 0],  # Path color (green)
-                width_min_pixels=2,
-                pickable=True,  # Enable interactions
-                opacity=0.7  # Path opacity
-            ),
-        ],
-        tooltip={"text": "{time}"},  # Tooltip to show time on hover
-    )
+    # Extract the lat, lon, and time columns
+    vehicle_data = project_data[['time', 'lat', 'lon']]
 
-    # Display the pydeck map in Streamlit
-    st.pydeck_chart(deck)
-
-    # Looping animation for vehicle movement over time
-    st.write("Vehicle Path Animation with Looping")
+    # Initialize Pygame
+    pygame.init()
     
-    # Loop through the vehicle path data for animation
-    i = 0
-    while True:
-        if i >= len(vehicle_data):  # Reset the loop after completing one cycle
-            i = 0  # Restart the animation from the beginning
-        
-        # Get the current position of the vehicle
-        current_position = vehicle_data.iloc[i]
-        
-        # Display the current step and vehicle's location
-        st.write(f"Step {i+1}: Vehicle is at ({current_position['lat']}, {current_position['lon']})")
-        
-        # Update the pydeck chart with the new position (animation effect)
-        deck = pdk.Deck(
-            initial_view_state=pdk.ViewState(latitude=current_position["lat"],
-                                             longitude=current_position["lon"],
-                                             zoom=15),
-            layers=[
-                pdk.Layer(
-                    "PathLayer",
-                    data=vehicle_data.iloc[:i+1],  # Show the path up to the current position
-                    get_path="[[lon, lat]]",
-                    get_width=5,
-                    get_color=[0, 255, 0],
-                    width_min_pixels=2,
-                    pickable=True,
-                    opacity=0.7,
-                ),
-            ],
-            tooltip={"text": f"Step {i+1}: {current_position['time']}"},  # Tooltip with time
-        )
-        
-        # Display updated chart
-        st.pydeck_chart(deck)
-        
-        # Simulate time delay for animation effect
-        time.sleep(1)  # Delay for 1 second between updates
-        
-        # Move to the next step
-        i += 1
+    # Set the window size
+    WIDTH, HEIGHT = 800, 600
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption(f"Vehicle Path Animation - {project}")
+    
+    # Set up the clock for frame rate
+    clock = pygame.time.Clock()
+    
+    # Scaling factor for lat/lon to fit within the window
+    lat_scale = 50000
+    lon_scale = 50000
+
+    # Initial position of the vehicle (start with the first data point)
+    vehicle_pos = [vehicle_data['lon'].iloc[0] * lon_scale, vehicle_data['lat'].iloc[0] * lat_scale]
+    vehicle_radius = 10
+
+    # Vehicle color (Red)
+    vehicle_color = (255, 0, 0)
+    
+    # Set the background color
+    background_color = (255, 255, 255)
+
+    # Run the animation loop
+    for index, row in vehicle_data.iterrows():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        # Clear the screen and set the background color
+        screen.fill(background_color)
+
+        # Update the vehicle position
+        vehicle_pos = [row['lon'] * lon_scale, row['lat'] * lat_scale]
+
+        # Draw the vehicle as a red circle
+        pygame.draw.circle(screen, vehicle_color, (int(vehicle_pos[0]), int(vehicle_pos[1])), vehicle_radius)
+
+        # Update the screen
+        pygame.display.flip()
+
+        # Wait before showing the next frame (adjust time as needed)
+        time.sleep(0.1)
+
+        # Limit the frame rate (optional)
+        clock.tick(30)
+
+    pygame.quit()
+
+    # Convert the final frame to an image for Streamlit display
+    img_bytes = pygame.image.tostring(screen, "RGB")
+    img = pygame.image.load(BytesIO(img_bytes))
+    st.image(img)
