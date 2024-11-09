@@ -1,48 +1,44 @@
-# visualization.py
 import streamlit as st
-import matplotlib.pyplot as plt
-import numpy as np
+import pydeck as pdk
+import pandas as pd
+from data_handling import prepare_data
 
+# Fungsi untuk menggambar grafik metrik
 def render_metrics_chart(data, project, accuracy_weight, collision_weight, time_weight):
-    st.subheader(f"Algorithm Performance Comparison for {project}")
+    project_data = prepare_data(data, project)
     
-    # Compute weighted metrics
-    labels = list(data.keys())
-    metrics = [np.array(values) for values in data.values()]
-    weighted_metrics = [
-        metric * np.array([accuracy_weight, collision_weight, time_weight]) for metric in metrics
-    ]
+    # Misalnya, menggunakan Matplotlib atau Plotly untuk menggambar grafik
+    st.write(f"Showing metrics for {project}")
+    st.line_chart(project_data[["accuracy", "collision", "time_efficiency"]])
 
-    # Plot bar chart for weighted metrics
-    x = np.arange(3)  # Accuracy, Collision Avoidance, Time
-    width = 0.2
-
-    fig, ax = plt.subplots()
-    for i, (metric, label) in enumerate(zip(weighted_metrics, labels)):
-        ax.bar(x + i * width, metric, width, label=label)
-
-    ax.set_xlabel("Metrics")
-    ax.set_title("Weighted Comparison of Selected Algorithms")
-    ax.set_xticks(x + width / 2)
-    ax.set_xticklabels(["Path Accuracy", "Collision Avoidance", "Time Efficiency"])
-    ax.legend()
-
-    st.pyplot(fig)
-
-def display_summary(project, algorithms):
-    # Display detailed summary for each selected algorithm
-    st.subheader("Project Summary and Algorithm Insights")
-    if project == "CARLA Simulation":
-        summary = {
-            "PPO": "Excels in path accuracy, balanced in other metrics.",
-            "DQN": "Good for collision avoidance, moderate path accuracy.",
-            "TD3": "High efficiency in time, with lower path accuracy."
-        }
-    elif project == "AirSim Simulation":
-        summary = {
-            "SAC": "Strong path accuracy, efficient in time management.",
-            "TRPO": "Superior in collision avoidance but moderate in other areas."
-        }
+# Fungsi untuk animasi jalur kendaraan
+def animate_vehicle_path():
+    st.subheader("Simulated Vehicle Path")
     
-    for alg in algorithms:
-        st.write(f"**{alg}:** {summary.get(alg, 'No data available')}")
+    # Data jalur kendaraan (contoh)
+    vehicle_data = pd.DataFrame({
+        "lat": [37.7749, 37.7750, 37.7751, 37.7752],  # Latitude
+        "lon": [-122.4194, -122.4193, -122.4192, -122.4191],  # Longitude
+        "time": [1, 2, 3, 4]  # Waktu pergerakan kendaraan
+    })
+    
+    # Membuat deck untuk menampilkan peta dengan Pydeck
+    deck = pdk.Deck(
+        initial_view_state=pdk.ViewState(latitude=37.775, longitude=-122.4194, zoom=15),
+        layers=[
+            pdk.Layer(
+                "ScatterplotLayer",  # Jenis layer yang digunakan untuk menampilkan titik kendaraan
+                data=vehicle_data,  # Data jalur kendaraan
+                get_position=["lon", "lat"],  # Mendapatkan posisi titik berdasarkan longitude dan latitude
+                get_color=[255, 0, 0],  # Warna titik kendaraan (merah)
+                get_radius=200,  # Ukuran titik
+                radius_min_pixels=5,  # Ukuran minimal titik
+                radius_max_pixels=10,  # Ukuran maksimal titik
+                pickable=True,  # Memungkinkan interaksi dengan titik
+            ),
+        ],
+        tooltip={"text": "{time}"}  # Menampilkan waktu ketika titik kendaraan diklik
+    )
+    
+    # Menampilkan peta dengan Streamlit
+    st.pydeck_chart(deck)
