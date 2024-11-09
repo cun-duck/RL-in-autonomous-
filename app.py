@@ -22,5 +22,5 @@ st.write("Explore the performance of different algorithms with various weights."
 # Show metrics chart with animation
 render_metrics_chart(data, project, accuracy_weight, collision_weight, time_weight)
 
-# Display path animation for vehicle
-animate_vehicle_path()
+# Display path animation for vehicle (with pydeck)
+animate_vehicle_path(data, project)
